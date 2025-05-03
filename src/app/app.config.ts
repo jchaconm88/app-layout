@@ -12,25 +12,26 @@ import { NbEvaIconsModule } from '@nebular/eva-icons';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { NbAuthJWTToken, NbAuthModule, NbPasswordAuthStrategy } from '@nebular/auth';
-import { NbSecurityModule, NbRoleProvider } from '@nebular/security';
+import { NbSecurityModule, NbRoleProvider, NbAccessChecker } from '@nebular/security';
 import { NbFirebasePasswordStrategy } from '@nebular/firebase-auth';
 import { provideHttpClient } from '@angular/common/http';
 import { AngularFireModule } from '@angular/fire/compat';
 import { LoginComponent } from './theme/components/login/login.component';
-import { of as observableOf } from 'rxjs';
+import { distinctUntilChanged, Observable, of as observableOf, startWith, tap } from 'rxjs';
 import { RoleService } from './core/services/role.service';
 import { RegisterComponent } from './theme/components/register/register.component';
+import { AppAccessChecker } from './core/services/access.checker';
 
 @Injectable({ providedIn: 'root' })
 export class NbSimpleRoleProvider extends NbRoleProvider {
   constructor(private roleService: RoleService) {
     super();
   }
-  getRole() {
-    let role = this.roleService.getRole();
-    console.log(role)
-    return role;
-  }
+  getRole(): Observable<string> {
+    return this.roleService.getRole().pipe(
+      distinctUntilChanged()
+    );
+}
 }
 
 export const appConfig: ApplicationConfig = {
@@ -81,17 +82,33 @@ export const appConfig: ApplicationConfig = {
       // Security
       NbSecurityModule.forRoot({
         accessControl: {
-          guest: { view: '*' },
+          guest: { 
+            view: 'guest' 
+          },
           user: {
             parent: 'guest',
+            view: 'user',
             create: '*',
             edit: '*',
             remove: '*',
           },
+          transport: {
+            parent: 'user',
+            view: 'transport',
+            create: '*',
+            edit: '*',
+            remove: '*',
+          },
+          admin: {
+            parent: 'user',
+            view: '*',
+            create: '*',
+          }
         },
       })
     ),
     { provide: NbRoleProvider, useClass: NbSimpleRoleProvider },
+    { provide: NbAccessChecker, useExisting: AppAccessChecker },
     { provide: NbFirebasePasswordStrategy, useClass: NbFirebasePasswordStrategy },
   ]
 };

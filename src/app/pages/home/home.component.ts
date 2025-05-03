@@ -1,14 +1,17 @@
 import { Component, inject } from '@angular/core';
-import { NbButtonModule, NbIconModule } from '@nebular/theme';
+import { NbActionsModule, NbButtonModule, NbIconModule } from '@nebular/theme';
 import { Auth, signInWithEmailAndPassword } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Firestore, collectionData, collection } from '@angular/fire/firestore';
+import { NbSecurityModule } from '@nebular/security';
 
 @Component({
   selector: 'app-home',
   imports: [
     NbButtonModule,
-    NbIconModule
+    NbIconModule,
+    NbActionsModule,
+    NbSecurityModule
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
